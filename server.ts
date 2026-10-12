@@ -49,7 +49,9 @@ async function startServer() {
   }
 
   app.listen(port, '0.0.0.0', () => {
-    console.log(`[DevPro Server] Servidor activo y escuchando en http://0.0.0.0:${port}`);
+    console.log(`[DevPro Server] Servidor activo en:`);
+    console.log(`  ➜ Local:   http://localhost:${port}`);
+    console.log(`  ➜ Network: http://127.0.0.1:${port}`);
   });
 }
 

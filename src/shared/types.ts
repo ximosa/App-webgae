@@ -2,9 +2,9 @@
  * Definiciones de tipos para el catálogo de servicios, pedidos y pagos
  */
 
-export type ServiceCategory = 'repair' | 'speed' | 'maintenance' | 'security' | 'custom';
+export type ServiceCategory = 'repair' | 'speed' | 'maintenance' | 'security' | 'custom' | 'hours';
 
-export type PricingType = 'fixed' | 'quote';
+export type PricingType = 'fixed' | 'quote' | 'hourly';
 
 export type OrderStatus = 'pending' | 'authorized' | 'captured' | 'failed' | 'cancelled' | 'refunded';
 
@@ -19,6 +19,7 @@ export interface ServiceItem {
   deliverables: string[];
   requirements: string[];
   priceInCents: number | null; // en céntimos de EUR (ej. 12900 = 129,00 €) o null si es a presupuesto
+  hourlyRateInCents?: number; // tarifa por hora en céntimos (ej. 1500 = 15,00 €/h)
   currency: 'EUR';
   pricingType: PricingType;
   estimatedDelivery: string;
@@ -46,6 +47,7 @@ export interface OrderRecord {
   serviceName: string;
   serviceCategory: string;
   amountInCents: number;
+  hours?: number;
   currency: 'EUR';
   customerName: string;
   customerEmail: string;
@@ -54,6 +56,9 @@ export interface OrderRecord {
   technicalNotes?: string;
   newsletterOptIn: boolean;
   status: OrderStatus;
+  paymentMethod?: 'paypal' | 'card';
+  cardLast4?: string;
+  cardBrand?: string;
   paypalOrderId?: string;
   paypalCaptureId?: string;
   paypalPayerEmail?: string;

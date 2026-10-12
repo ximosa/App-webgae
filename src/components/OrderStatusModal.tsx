@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Search, CheckCircle2, Clock, AlertTriangle, RefreshCw, Lock, ExternalLink } from 'lucide-react';
+import { X, Search, CheckCircle2, Clock, AlertTriangle, RefreshCw, Lock, ExternalLink, CreditCard } from 'lucide-react';
 import { formatCurrencyEUR } from '../shared/catalog.ts';
 
 interface OrderStatusModalProps {
@@ -181,6 +181,12 @@ export const OrderStatusModal: React.FC<OrderStatusModalProps> = ({
                   <span className="text-slate-400">Servicio:</span>
                   <span className="font-semibold text-slate-200">{orderData.serviceName}</span>
                 </div>
+                {orderData.hours && (
+                  <div className="flex justify-between py-1 border-b border-slate-800/50">
+                    <span className="text-slate-400">Horas Contratadas:</span>
+                    <span className="font-semibold text-emerald-400">{orderData.hours} {orderData.hours === 1 ? 'hora' : 'horas'} (a 15 €/h)</span>
+                  </div>
+                )}
                 <div className="flex justify-between py-1 border-b border-slate-800/50">
                   <span className="text-slate-400">Cliente:</span>
                   <span className="text-slate-200">{orderData.customerName}</span>
@@ -199,6 +205,21 @@ export const OrderStatusModal: React.FC<OrderStatusModalProps> = ({
                   <div className="flex justify-between py-1 border-b border-slate-800/50">
                     <span className="text-slate-400">Confirmación Pago:</span>
                     <span className="text-slate-300">{new Date(orderData.capturedAt).toLocaleString('es-ES')}</span>
+                  </div>
+                )}
+                {orderData.paymentMethod && (
+                  <div className="flex justify-between py-1 border-b border-slate-800/50">
+                    <span className="text-slate-400">Método de Pago:</span>
+                    <span className="text-slate-300 flex items-center gap-1.5 font-medium">
+                      {orderData.paymentMethod === 'card' ? (
+                        <>
+                          <CreditCard className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>Tarjeta {orderData.cardBrand ? `(${orderData.cardBrand}${orderData.cardLast4 ? ` •••• ${orderData.cardLast4}` : ''})` : 'bancaria'}</span>
+                        </>
+                      ) : (
+                        <span>PayPal</span>
+                      )}
+                    </span>
                   </div>
                 )}
               </div>

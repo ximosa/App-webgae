@@ -5,6 +5,9 @@ import { formatCurrencyEUR } from '../shared/catalog.ts';
 interface ConfirmationViewProps {
   orderId: string;
   accessToken: string;
+  paymentMethod?: 'paypal' | 'card';
+  cardLast4?: string;
+  cardBrand?: string;
   onReset: () => void;
   onOpenOrderTracking: (orderId: string, token: string) => void;
 }
@@ -12,6 +15,9 @@ interface ConfirmationViewProps {
 export const ConfirmationView: React.FC<ConfirmationViewProps> = ({
   orderId,
   accessToken,
+  paymentMethod = 'paypal',
+  cardLast4,
+  cardBrand,
   onReset,
   onOpenOrderTracking
 }) => {
@@ -46,7 +52,9 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({
 
         <div className="space-y-2">
           <div className="text-xs font-bold text-emerald-400 uppercase tracking-widest">
-            ¡Pago Verificado con Éxito en PayPal!
+            {paymentMethod === 'card'
+              ? `¡Pago con Tarjeta ${cardBrand ? `(${cardBrand}${cardLast4 ? ` •••• ${cardLast4}` : ''}) ` : ''}Verificado con Éxito!`
+              : '¡Pago Verificado con Éxito en PayPal!'}
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
             Contratación Confirmada
@@ -117,7 +125,9 @@ export const ConfirmationView: React.FC<ConfirmationViewProps> = ({
             <div>
               <h3 className="text-sm font-bold text-slate-200">Recepción de Comprobante por Email</h3>
               <p className="text-xs text-slate-400 mt-0.5">
-                Hemos enviado a tu correo el recibo oficial de PayPal y la confirmación detallada con el resumen del servicio contratado.
+                {paymentMethod === 'card'
+                  ? 'Hemos enviado a tu correo el comprobante oficial de pago con tarjeta y la confirmación detallada con el resumen del servicio contratado.'
+                  : 'Hemos enviado a tu correo el recibo oficial de PayPal y la confirmación detallada con el resumen del servicio contratado.'}
               </p>
             </div>
           </div>

@@ -24,12 +24,13 @@ export async function notifyNewPaidOrder(order: OrderRecord): Promise<Notificati
 
   const adminBodyText = `
 =====================================================
-NUEVO SERVICIO CONTRATADO Y PAGADO POR PAYPAL
+NUEVO SERVICIO CONTRATADO Y CONFIRMADO
 =====================================================
 - Referencia de Pedido: ${order.id}
 - Servicio: ${order.serviceName} (${order.serviceCategory})
 - Importe Cobrado: ${formatCurrencyEUR(order.amountInCents)} EUR
-- PayPal Capture ID: ${order.paypalCaptureId || 'Verificado'}
+- Método de Pago: ${order.paymentMethod === 'card' ? `Tarjeta Bancaria (${order.cardBrand || 'Tarjeta'} •••• ${order.cardLast4 || '****'})` : 'PayPal'}
+- ID de Transacción: ${order.paypalCaptureId || 'Verificado'}
 - Fecha y Hora: ${new Date().toLocaleString('es-ES')}
 
 DATOS DEL CLIENTE:

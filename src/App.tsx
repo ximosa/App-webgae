@@ -34,7 +34,13 @@ export default function App() {
   });
 
   // Pantalla de confirmación tras pago exitoso
-  const [confirmedOrder, setConfirmedOrder] = useState<{ orderId: string; accessToken: string } | null>(null);
+  const [confirmedOrder, setConfirmedOrder] = useState<{
+    orderId: string;
+    accessToken: string;
+    paymentMethod?: 'paypal' | 'card';
+    cardLast4?: string;
+    cardBrand?: string;
+  } | null>(null);
 
   // Mensaje de cancelación de PayPal si se detecta en URL
   const [paypalCanceledNotice, setPaypalCanceledNotice] = useState<boolean>(false);
@@ -73,8 +79,11 @@ export default function App() {
     }
   }, []);
 
-  const handleSelectServiceForCheckout = (service: ServiceItem) => {
+  const [selectedHours, setSelectedHours] = useState<number>(1);
+
+  const handleSelectServiceForCheckout = (service: ServiceItem, initialHours?: number) => {
     setSelectedService(service);
+    setSelectedHours(initialHours || 1);
     setIsCheckoutModalOpen(true);
   };
 
@@ -93,7 +102,13 @@ export default function App() {
     handleSelectServiceForCheckout(urgentService);
   };
 
-  const handlePaymentSuccess = (orderData: { orderId: string; accessToken: string }) => {
+  const handlePaymentSuccess = (orderData: {
+    orderId: string;
+    accessToken: string;
+    paymentMethod?: 'paypal' | 'card';
+    cardLast4?: string;
+    cardBrand?: string;
+  }) => {
     setIsCheckoutModalOpen(false);
     setConfirmedOrder(orderData);
     // Desplazar suavemente arriba
@@ -152,6 +167,9 @@ export default function App() {
           <ConfirmationView
             orderId={confirmedOrder.orderId}
             accessToken={confirmedOrder.accessToken}
+            paymentMethod={confirmedOrder.paymentMethod}
+            cardLast4={confirmedOrder.cardLast4}
+            cardBrand={confirmedOrder.cardBrand}
             onReset={() => setConfirmedOrder(null)}
             onOpenOrderTracking={handleOpenSpecificOrderTracking}
           />
@@ -197,6 +215,7 @@ export default function App() {
       {/* Modal de Contratación y Pago PayPal Sin Registro */}
       <CheckoutModal
         service={selectedService}
+        initialHours={selectedHours}
         isOpen={isCheckoutModalOpen}
         serverConfig={serverConfig}
         onClose={() => setIsCheckoutModalOpen(false)}

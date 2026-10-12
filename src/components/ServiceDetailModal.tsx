@@ -21,6 +21,7 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
   if (!isOpen || !service) return null;
 
   const isFixed = service.pricingType === 'fixed';
+  const isHourly = service.pricingType === 'hourly';
 
   return (
     <div
@@ -54,10 +55,13 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
           {/* Price & Delivery overview */}
           <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <div className="text-xs text-slate-400">Importe Oficial</div>
+              <div className="text-xs text-slate-400">
+                {isHourly ? 'Tarifa por Hora' : 'Importe Oficial'}
+              </div>
               <div className="text-2xl font-black text-white">
-                {formatCurrencyEUR(service.priceInCents)}
+                {isHourly ? '15,00 €' : formatCurrencyEUR(service.priceInCents)}
                 {isFixed && <span className="text-xs text-slate-400 font-normal ml-1">/ tarifa fija</span>}
+                {isHourly && <span className="text-xs text-indigo-300 font-semibold ml-1.5">/ hora</span>}
               </div>
             </div>
             <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-300">
@@ -147,7 +151,18 @@ export const ServiceDetailModal: React.FC<ServiceDetailModalProps> = ({
             Volver al catálogo
           </button>
 
-          {isFixed ? (
+          {isHourly ? (
+            <button
+              onClick={() => {
+                onClose();
+                onProceedCheckout(service);
+              }}
+              className="w-full sm:w-auto px-6 py-3 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+            >
+              <span>Contratar por Horas (15 €/h)</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+          ) : isFixed ? (
             <button
               onClick={() => {
                 onClose();

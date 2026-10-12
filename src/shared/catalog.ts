@@ -7,6 +7,43 @@ import { ServiceItem } from './types.ts';
  */
 export const SERVICES_CATALOG: ServiceItem[] = [
   {
+    id: 'hourly-support',
+    name: 'Bolsa de Horas de Soporte & Desarrollo Web',
+    category: 'hours',
+    categoryLabel: 'Soporte Técnico Flexible por Horas',
+    shortDescription: 'Contrata las horas que necesites para ajustes, diseño, resolución de incidencias o desarrollo a medida por 15 €/hora.',
+    fullDescription: 'Servicio flexible de asistencia técnica y desarrollo por horas para cualquier necesidad en tu sitio web. Tú eliges cuántas horas necesitas (a 15 €/hora) y las dedicamos inmediatamente a tus tareas prioritarias: corrección de errores, maquetación visual, personalización de plugins, cambios CSS/JS, optimización o consultoría directa.',
+    scope: [
+      'Desarrollo y ajustes en WordPress, WooCommerce, PHP, JavaScript, HTML y CSS',
+      'Corrección de errores y bugs específicos en código o plugins',
+      'Maquetación responsive, ajustes de diseño y mejoras visuales',
+      'Instalación, configuración o personalización de herramientas y temas',
+      'Cómputo transparente del tiempo dedicado e informe de tareas'
+    ],
+    deliverables: [
+      'Tareas solicitadas ejecutadas y comprobadas en tu sitio web',
+      'Informe detallado de actividades con el desglose de tiempo empleado',
+      'Soporte directo con el desarrollador asignado durante la intervención',
+      'Garantía técnica sobre el trabajo realizado'
+    ],
+    requirements: [
+      'Descripción de las tareas o lista de prioridades a realizar',
+      'Accesos necesarios a WordPress, hosting o FTP según la tarea solicitada'
+    ],
+    priceInCents: 1500, // 15,00 € / hora base
+    hourlyRateInCents: 1500,
+    currency: 'EUR',
+    pricingType: 'hourly',
+    estimatedDelivery: 'Inicio inmediato según disponibilidad (en 24h laborables)',
+    conditions: [
+      'Tarifa de 15,00 €/hora (impuestos incluidos).',
+      'El cliente elige libremente el número de horas a contratar (mínimo 1 hora).',
+      'Cómputo transparente de horas reportado tras la intervención.'
+    ],
+    popular: true,
+    active: true
+  },
+  {
     id: 'wp-urgency-repair',
     name: 'Reparación Urgente de Sitio Web / WordPress',
     category: 'repair',
