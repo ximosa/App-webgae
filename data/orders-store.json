@@ -1,0 +1,42 @@
+{
+  "orders": {
+    "ord_test_1791809286714": {
+      "id": "ord_test_1791809286714",
+      "accessToken": "test_token_secret_123",
+      "serviceId": "wp-urgency-repair",
+      "serviceName": "Reparación Urgente de Sitio Web / WordPress",
+      "serviceCategory": "Reparación y Soporte Crítico",
+      "amountInCents": 12900,
+      "currency": "EUR",
+      "customerName": "Cliente Pruebas",
+      "customerEmail": "cliente@test.es",
+      "websiteUrl": "https://test.es",
+      "problemDescription": "Error 500 al actualizar WooCommerce",
+      "newsletterOptIn": false,
+      "status": "captured",
+      "paypalOrderId": "SANDBOX-ORDER-1791809286714-NAOGVI",
+      "createdAt": "2026-10-12T12:48:06.714Z",
+      "updatedAt": "2026-10-12T12:48:06.716Z",
+      "paypalCaptureId": "SIM-CAP-1791809286716"
+    }
+  },
+  "quotes": {
+    "quote_test_1791809286717": {
+      "id": "quote_test_1791809286717",
+      "serviceId": "custom-web-development",
+      "serviceName": "Desarrollo Web a Medida, Migraciones & Aplicaciones Web",
+      "customerName": "Empresa Demo",
+      "customerEmail": "demo@empresa.com",
+      "projectDescription": "Desarrollo de plataforma SaaS con backend y pagos",
+      "status": "submitted",
+      "createdAt": "2026-10-12T12:48:06.717Z",
+      "updatedAt": "2026-10-12T12:48:06.717Z"
+    }
+  },
+  "processedWebhookEvents": {
+    "WH-EVT-1791809286717": {
+      "processedAt": "2026-10-12T12:48:06.717Z",
+      "eventType": "PAYMENT.CAPTURE.COMPLETED"
+    }
+  }
+}
