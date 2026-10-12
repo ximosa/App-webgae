@@ -17,10 +17,12 @@ Desplegable de forma nativa en **Vercel** como aplicación Full-Stack (Frontend 
 7. [Guía Paso a Paso: Configurar PayPal (Sandbox y Live)](#-guía-paso-a-paso-configurar-paypal-sandbox-y-live)
 8. [Despliegue en Producción en Vercel](#-despliegue-en-producción-en-vercel)
 9. [Configuración y Verificación del Webhook de PayPal](#-configuración-y-verificación-del-webhook-de-paypal)
-10. [Flujo de Pago y Seguridad (Cero-Contraseñas & RGPD)](#-flujo-de-pago-y-seguridad-cero-contraseñas--rgpd)
-11. [Endpoints de la API](#-endpoints-de-la-api)
-12. [Criterios de Aceptación y Pruebas](#-criterios-de-aceptación-y-pruebas)
-13. [Licencia](#-licencia)
+10. [¿Qué Sucede Exactamente Cuando se Rellena el Formulario?](#-qué-sucede-exactamente-cuando-se-rellena-el-formulario)
+11. [¿Cómo Recibirás los Avisos de Pago para Iniciar el Trabajo? (Tutorial de Notificaciones)](#-cómo-recibirás-los-avisos-de-pago-para-iniciar-el-trabajo-tutorial-de-notificaciones)
+12. [Flujo de Pago y Seguridad (Cero-Contraseñas & RGPD)](#-flujo-de-pago-y-seguridad-cero-contraseñas--rgpd)
+13. [Endpoints de la API](#-endpoints-de-la-api)
+14. [Criterios de Aceptación y Pruebas](#-criterios-de-aceptación-y-pruebas)
+15. [Licencia](#-licencia)
 
 ---
 
@@ -144,6 +146,9 @@ Edita tu archivo `.env` local y configura las variables en Vercel:
 | `PAYPAL_WEBHOOK_ID` | ID del webhook registrado en PayPal | *(opcional en local)* | `9AB12345CD678901E` |
 | `PAYPAL_CURRENCY` | Divisa de cobro | `EUR` | `EUR` |
 | `ADMIN_NOTIFICATION_EMAIL` | Email para notificaciones | `pedidos@tudominio.com` | `pedidos@tudominio.com` |
+| `RESEND_API_KEY` | *(Opcional)* API key de Resend para enviar emails | `re_...` | `re_...` |
+| `ADMIN_ALERT_WEBHOOK_URL` | *(Opcional)* Webhook para avisos en Telegram/Discord | `https://...` | `https://...` |
+| `ADMIN_SECRET_KEY` | *(Opcional)* Clave para `/api/admin/orders` | `clave_admin` | `clave_admin` |
 
 > ⚠️ **Seguridad**: Nunca subas el archivo `.env` a GitHub. Está excluido en `.gitignore`.
 
@@ -221,6 +226,137 @@ El webhook permite reconciliar de forma asíncrona cualquier cambio de estado (p
 
 ---
 
+## 📝 ¿Qué Sucede Exactamente Cuando se Rellena el Formulario?
+
+El flujo de contratación está diseñado en dos capas sincronizadas: lo que experimenta el cliente y lo que ejecuta el servidor de forma segura.
+
+### A. En la Interfaz (Experiencia del Cliente)
+
+1. **Paso 1: Datos sin registro (Invitado)**
+   - El cliente introduce su nombre o razón social, correo de contacto, la URL de su web y detalla el problema (mínimo 10 caracteres).
+   - Opcionalmente añade notas técnicas (proveedor de hosting, versión de PHP, plugins problemáticos).
+   - Marca obligatoriamente las casillas de **Condiciones de Contratación** y **Política de Privacidad (RGPD)**.
+   - Pulsa **«Continuar al Resumen del Pedido»**.
+2. **Paso 2: Resumen del Pedido y Transparencia**
+   - Se muestra la ficha con el servicio seleccionado, el importe oficial en euros (IVA incluido), el plazo de entrega estimado (SLA) y la confirmación de datos.
+   - Pulsa **«Proceder al Pago con PayPal»**.
+3. **Paso 3: Pago Seguro en PayPal**
+   - Se abre la ventana modal oficial de PayPal. El cliente abona el importe con su saldo de PayPal, cuenta bancaria o tarjeta asociada.
+   - Si el cliente cancela o cierra la ventana, la aplicación le informa con un aviso no destructivo, conservando los datos del formulario para reintentar sin duplicar cobros.
+4. **Confirmación Inmediata con Privacidad**
+   - Al validarse el cobro, la pantalla cambia automáticamente a la **Pantalla de Confirmación**:
+     - Muestra el identificador único del pedido (ej. `ord_8f1a2c_...`).
+     - Genera un **enlace privado de seguimiento** con token criptográfico (ej. `/?order=ord_...&token=...`) que el cliente puede guardar en favoritos.
+     - Permite **imprimir o guardar el recibo** directamente en PDF.
+     - Presenta los **siguientes pasos**: cómo le contactará el equipo y cómo entregará los accesos temporales mediante canal seguro.
+
+### B. En el Servidor (Mecanismo Técnico y Criptográfico)
+
+1. **Validación estricta y cálculo de precio en servidor (`POST /api/checkout/create-order`)**:
+   - El servidor comprueba los tipos de datos y busca el servicio en el catálogo maestro (`src/shared/catalog.ts`).
+   - **El importe nunca procede del navegador**: el servidor calcula la tarifa real en céntimos de EUR. Si un usuario intenta enviar un precio manipulado desde la consola, la petición es rechazada de inmediato.
+   - Si el servicio es personalizado (`pricingType: 'quote'`), se rechaza cualquier cobro directo y se exige el flujo de presupuesto.
+2. **Creación de Orden en PayPal REST API v2**:
+   - El servidor llama con sus credenciales privadas a `https://api-m.paypal.com/v2/checkout/orders` (o Sandbox) con `intent: 'CAPTURE'` y `currency_code: 'EUR'`.
+3. **Captura Verificada y Control Antifraude (`POST /api/checkout/capture-order`)**:
+   - Al autorizar el cliente, el servidor ejecuta la captura con sus credenciales privadas.
+   - Verifica que el estado devuelto sea estrictamente `COMPLETED`.
+   - Comprueba que la divisa sea `EUR` y que la cantidad capturada por PayPal coincida **al céntimo** con el catálogo.
+   - **Solo tras esa verificación** el pedido pasa a estado `captured`. Ningún cambio de URL en el navegador se toma como prueba de pago.
+4. **Generación de Token Criptográfico (Anti-Enumeración)**:
+   - Se genera un `accessToken` de alta entropía (48 caracteres hex) vinculado al pedido.
+   - Nadie puede espiar los datos de otros clientes probando números secuenciales en `/api/orders/status`.
+5. **Principio "Cero-Contraseñas"**:
+   - El formulario prohíbe explícitamente solicitar contraseñas de WordPress o claves API en formularios web abiertos. Al confirmarse el pago, se inicia el protocolo cifrado para entrega de credenciales temporales.
+
+---
+
+## 📬 ¿Cómo Recibirás los Avisos de Pago para Iniciar el Trabajo? (Tutorial de Notificaciones)
+
+Dispones de **3 vías complementarias** para enterarte en el mismo instante en que un cliente paga y proceder al trabajo con todos sus datos técnicos:
+
+### Vía 1: Aviso Oficial Inmediato de PayPal a tu Email
+En cuanto un cliente paga, **PayPal envía un correo instantáneo** a tu email de PayPal Business:
+- **Asunto**: *"Ha recibido un pago de X,XX EUR de [Nombre del Cliente]"*
+- Contiene el importe abonado y el email de PayPal del pagador.
+
+### Vía 2: Notificación Detallada por Correo con Resend (Recomendada)
+Para recibir la ficha técnica completa del trabajo en tu bandeja de entrada:
+
+1. Crea una cuenta gratuita en [Resend](https://resend.com) (incluye 3.000 emails/mes gratis).
+2. Genera una API Key en **API Keys > Create API Key** con permisos de envío.
+3. Añade en tus variables de entorno en Vercel (o `.env`):
+   ```env
+   RESEND_API_KEY=re_tu_api_key_aqui
+   ADMIN_NOTIFICATION_EMAIL=tu_correo@tudominio.com
+   ```
+4. **Lo que recibirás en tu correo:**
+   ```text
+   Asunto: 🚨 [NUEVO PAGO DEVPRO] Reparación Urgente WordPress (129,00 €) - Carmen Rodríguez
+
+   =====================================================
+   NUEVO SERVICIO CONTRATADO Y PAGADO POR PAYPAL
+   =====================================================
+   - Referencia de Pedido: ord_8f1a2c_km91
+   - Servicio: Reparación Urgente de Sitio Web / WordPress
+   - Importe Cobrado: 129,00 € EUR
+   - PayPal Capture ID: 3AB12345CD678901E
+   - Fecha y Hora: 12/10/2026, 15:45:12
+
+   DATOS DEL CLIENTE:
+   - Nombre: Carmen Rodríguez
+   - Correo Electrónico: carmen@mitienda.com
+   - Sitio Web: https://mitienda.com
+
+   DESCRIPCIÓN DE LA INCIDENCIA:
+   "La web muestra pantalla blanca (Error 500) tras actualizar WooCommerce esta mañana..."
+
+   NOTAS TÉCNICAS:
+   "Hosting: SiteGround, PHP 8.1"
+
+   ENLACE DE SEGUIMIENTO EN VIVO:
+   https://tu-dominio.vercel.app/?order=ord_8f1a2c_km91&token=...
+   =====================================================
+   ```
+5. **Lo que recibe el cliente automáticamente:** Un correo de confirmación con su enlace privado de seguimiento y el aviso de que su caso está en marcha.
+
+### Vía 3: Alertas Instantáneas Push en tu Móvil (Discord, Telegram o Slack)
+Si quieres enterarte en el móvil al instante mediante una notificación push:
+
+1. **Con Discord**:
+   - En tu servidor de Discord, crea un canal `#pedidos-web`.
+   - Ve a **Ajustes del Canal > Integraciones > Webhooks > Nuevo Webhook**.
+   - Copia la URL del webhook y añádela a tu `.env` o Vercel:
+     ```env
+     ADMIN_ALERT_WEBHOOK_URL="https://discord.com/api/webhooks/..."
+     ```
+2. **Con Telegram**:
+   - Crea un bot con [@BotFather](https://t.me/BotFather) y obtén tu token.
+   - Crea un webhook o integra un canal mediante bot para enviar el mensaje a tu chat.
+3. Cada vez que alguien pague, sonará una notificación en tu teléfono con los datos de contacto y la avería.
+
+### Vía 4: Panel / Endpoint Administrativo (`/api/admin/orders`)
+Para revisar todos los trabajos entrantes o el histórico:
+1. Configura una clave secreta en tus variables:
+   ```env
+   ADMIN_SECRET_KEY="tu_clave_secreta_aqui"
+   ```
+2. Accede en el navegador a:
+   ```text
+   https://tu-dominio.vercel.app/api/admin/orders?secret=tu_clave_secreta_aqui
+   ```
+3. Obtendrás el listado completo de pedidos en tiempo real con su estado (`captured`, `pending`, `failed`), datos del cliente, web y avería.
+
+---
+
+### 📋 Protocolo Operativo al Recibir un Pedido:
+1. **Revisar la notificación:** Lees la descripción del problema y la URL de la web recibida.
+2. **Contactar al cliente:** Le respondes al correo facilitado o le envías un enlace cifrado seguro (ej. Bitwarden Send o 1Password) para que cree un usuario temporal en WordPress/Hosting.
+3. **Ejecutar el servicio:** Inicias el diagnóstico o trabajo técnico dentro del plazo contratado.
+4. **Entrega e informe:** Envías el informe de intervención con las causas resueltas y el sitio verificado.
+
+---
+
 ## 🔒 Flujo de Pago y Seguridad (Cero-Contraseñas & RGPD)
 
 1. **Elección y Validación**: El cliente elige un servicio con precio cerrado en el catálogo. El servidor comprueba la existencia del servicio y determina el importe oficial en EUR (nunca se confía en parámetros enviados por el navegador).
@@ -236,13 +372,14 @@ El webhook permite reconciliar de forma asíncrona cualquier cambio de estado (p
 
 | Método | Endpoint | Descripción | Parámetros Principales |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/config` | Configuración pública para el cliente | Ninguno |
-| `GET` | `/api/services` | Catálogo autorizado de servicios | Ninguno |
+| `GET` | `/api/config` | Configuración pública de PayPal para el cliente | Ninguno |
+| `GET` | `/api/services` | Catálogo autorizado de servicios del servidor | Ninguno |
 | `POST` | `/api/checkout/create-order` | Valida datos y genera orden en PayPal | `serviceId`, `customerName`, `customerEmail`, `problemDescription`, etc. |
 | `POST` | `/api/checkout/capture-order` | Captura y verifica el pago seguro | `orderId`, `accessToken`, `paypalOrderId` |
 | `GET` | `/api/orders/status` | Consulta segura de pedido con token | `?orderId=ord_...&token=...` |
 | `POST` | `/api/quote-request` | Solicitud de cotización para servicios a medida | `serviceId`, `customerEmail`, `projectDescription`, etc. |
 | `POST` | `/api/paypal/webhook` | Recepción y verificación criptográfica de eventos | Encabezados de firma de PayPal y cuerpo JSON |
+| `GET` | `/api/admin/orders` | Consulta administrativa de todos los pedidos | `?secret=tu_clave_secreta` |
 
 ---
 

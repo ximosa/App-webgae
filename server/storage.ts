@@ -101,5 +101,17 @@ export const Storage = {
 
   getAllOrdersCount(): number {
     return Object.keys(memoryStore.orders).length;
+  },
+
+  getAllOrders(): OrderRecord[] {
+    return Object.values(memoryStore.orders).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  },
+
+  getAllQuotes(): QuoteRequestRecord[] {
+    return Object.values(memoryStore.quotes).sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
   }
 };

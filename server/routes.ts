@@ -9,6 +9,7 @@ import {
   verifyPayPalWebhookSignature,
   getPublicPayPalConfig
 } from './paypal.ts';
+import { notifyNewPaidOrder, notifyNewQuoteRequest } from './notifications.ts';
 
 export const apiRouter = express.Router();
 
@@ -212,6 +213,11 @@ apiRouter.post('/checkout/capture-order', async (req: Request, res: Response) =>
     order.capturedAt = new Date().toISOString();
     Storage.saveOrder(order);
 
+    // Disparar notificación inmediata al administrador y al cliente
+    notifyNewPaidOrder(order).catch((err) => {
+      console.warn('[NOTIFICACIONES] Error no bloqueante al despachar avisos:', err);
+    });
+
     return res.json({
       success: true,
       orderId: order.id,
@@ -331,6 +337,11 @@ apiRouter.post('/quote-request', (req: Request, res: Response) => {
 
     Storage.saveQuote(newQuote);
 
+    // Disparar aviso de nueva solicitud de presupuesto
+    notifyNewQuoteRequest(newQuote).catch((err) => {
+      console.warn('[NOTIFICACIONES] Error al notificar presupuesto:', err);
+    });
+
     return res.status(201).json({
       success: true,
       quoteId,
@@ -408,6 +419,11 @@ apiRouter.post('/paypal/webhook', async (req: Request, res: Response) => {
         order.capturedAt = resource?.create_time || new Date().toISOString();
         Storage.saveOrder(order);
         console.log(`[WEBHOOK] Pedido ${order.id} actualizado a CAPTURED vía webhook.`);
+
+        // Notificar al administrador del pago recibido vía webhook
+        notifyNewPaidOrder(order).catch((err) => {
+          console.warn('[NOTIFICACIONES] Error al notificar desde webhook:', err);
+        });
       }
     } else if (eventType === 'PAYMENT.CAPTURE.DENIED') {
       const resource = event.resource;
@@ -439,4 +455,28 @@ apiRouter.post('/paypal/webhook', async (req: Request, res: Response) => {
     console.error('[WEBHOOK] Error al procesar evento:', error);
     return res.status(500).json({ error: 'Error interno al procesar el webhook.' });
   }
+});
+
+/**
+ * GET /api/admin/orders
+ * Endpoint administrativo para consultar el listado de pedidos entrantes y su estado
+ */
+apiRouter.get('/admin/orders', (req: Request, res: Response) => {
+  const secretKey = process.env.ADMIN_SECRET_KEY;
+  const providedKey = req.query.secret as string;
+
+  // Si existe ADMIN_SECRET_KEY en las variables de entorno, exigir coincidencia
+  if (secretKey && providedKey !== secretKey) {
+    return res.status(401).json({ error: 'Acceso no autorizado. Clave secreta requerida.' });
+  }
+
+  const orders = Storage.getAllOrders();
+  const quotes = Storage.getAllQuotes();
+
+  return res.json({
+    totalOrders: orders.length,
+    capturedOrders: orders.filter((o) => o.status === 'captured').length,
+    orders,
+    quotes
+  });
 });
