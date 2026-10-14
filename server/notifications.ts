@@ -63,7 +63,7 @@ ACCIONES RECOMENDADAS:
   let clientNotified = false;
 
   // 2. Si se ha configurado Webhook de Alerta (ej. Telegram, Discord o Slack)
-  if (ADMIN_WEBHOOK_URL) {
+  if (ADMIN_WEBHOOK_URL && /^https?:\/\//i.test(ADMIN_WEBHOOK_URL)) {
     try {
       await fetch(ADMIN_WEBHOOK_URL, {
         method: 'POST',
@@ -148,7 +148,7 @@ Gracias por confiar en Webgae.
 /**
  * Notificar al administrador cuando se recibe una solicitud de presupuesto personalizado
  */
-export async function notifyNewQuoteRequest(quote: QuoteRequestRecord): Promise<void> {
+export async function notifyNewQuoteRequest(quote: QuoteRequestRecord): Promise<{ notified: boolean; channel: string; error?: string }> {
   const quoteText = `
 =====================================================
 NUEVA SOLICITUD DE PRESUPUESTO PERSONALIZADO
@@ -169,6 +169,9 @@ DESCRIPCIÓN DEL PROYECTO:
   console.log(quoteText);
   console.log('\n');
 
+  let notified = false;
+  let notifyError: string | undefined;
+
   if (RESEND_API_KEY) {
     try {
       const response = await fetch('https://api.resend.com/emails', {
@@ -182,13 +185,23 @@ DESCRIPCIÓN DEL PROYECTO:
           text: `Servicio: ${quote.serviceName}\nNombre: ${quote.customerName}\nCorreo: ${quote.customerEmail}\nReferencia: ${quote.id}\n\nMensaje:\n${quote.projectDescription}`
         })
       });
-      if (!response.ok) console.error('[CONTACTO] Resend no pudo entregar el correo:', await response.text());
+      if (response.ok) {
+        const sent = (await response.json().catch(() => ({}))) as { id?: string };
+        notified = true;
+        console.log(`[CONTACTO] Consulta enviada a ${ADMIN_EMAIL} vía Resend (id: ${sent.id || 'n/a'}).`);
+      } else {
+        notifyError = `Resend HTTP ${response.status}: ${await response.text()}`;
+        console.error('[CONTACTO] Resend no pudo entregar el correo:', notifyError);
+      }
     } catch (error) {
+      notifyError = error instanceof Error ? error.message : String(error);
       console.error('[CONTACTO] Error enviando la consulta por Resend:', error);
     }
+  } else {
+    console.warn('[CONTACTO] RESEND_API_KEY no configurada: la consulta solo quedó registrada en el log del servidor.');
   }
 
-  if (ADMIN_WEBHOOK_URL) {
+  if (ADMIN_WEBHOOK_URL && /^https?:\/\//i.test(ADMIN_WEBHOOK_URL)) {
     try {
       await fetch(ADMIN_WEBHOOK_URL, {
         method: 'POST',
@@ -201,4 +214,6 @@ DESCRIPCIÓN DEL PROYECTO:
       console.warn('[NOTIFICACIONES] Error en webhook de cotización:', e);
     }
   }
+
+  return { notified, channel: RESEND_API_KEY ? 'email_resend' : 'console_logger', error: notifyError };
 }

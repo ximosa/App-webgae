@@ -393,9 +393,17 @@ apiRouter.post('/quote-request', (req: Request, res: Response) => {
     Storage.saveQuote(newQuote);
 
     // Disparar aviso de nueva solicitud de presupuesto
-    notifyNewQuoteRequest(newQuote).catch((err) => {
-      console.warn('[NOTIFICACIONES] Error al notificar presupuesto:', err);
-    });
+    notifyNewQuoteRequest(newQuote)
+      .then((result) => {
+        if (result.notified) {
+          console.log(`[API] Consulta ${quoteId} notificada por email a ${process.env.ADMIN_NOTIFICATION_EMAIL || 'administrador'}.`);
+        } else {
+          console.warn(`[API] Consulta ${quoteId} registrada pero NO se envió email: ${result.error || 'sin proveedor de email configurado (RESEND_API_KEY).'}`);
+        }
+      })
+      .catch((err) => {
+        console.warn('[NOTIFICACIONES] Error al notificar presupuesto:', err);
+      });
 
     return res.status(201).json({
       success: true,
