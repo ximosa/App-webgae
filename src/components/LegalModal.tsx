@@ -19,7 +19,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ isOpen, docType, onClose
       body: (
         <div className="space-y-4 text-sm text-slate-300 leading-relaxed">
           <p>
-            <strong>1. Objeto y Ámbito de Aplicación:</strong> Las presentes condiciones regulan la contratación de servicios técnicos de desarrollo web, mantenimiento, optimización y reparación ofrecidos por <em>DevPro Digital</em> a clientes profesionales, empresas y particulares sin necesidad de registro previo.
+            <strong>1. Objeto y Ámbito de Aplicación:</strong> Las presentes condiciones regulan la contratación de servicios técnicos de desarrollo web, mantenimiento, optimización y reparación ofrecidos por <em>Webgae</em> a clientes profesionales, empresas y particulares sin necesidad de registro previo.
           </p>
           <p>
             <strong>2. Procedimiento de Contratación:</strong> El cliente selecciona el servicio deseado en el catálogo oficial, cumplimenta los datos identificativos y técnicos requeridos y formaliza el pago a través de la pasarela segura PayPal. Tras la verificación del pago en el servidor, se emitirá una confirmación con la referencia única de pedido.
@@ -28,7 +28,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ isOpen, docType, onClose
             <strong>3. Precios y Forma de Pago:</strong> Los importes mostrados en el catálogo oficial para servicios de precio cerrado están expresados en Euros (€) e incluyen los impuestos aplicables correspondientes. El pago se efectúa íntegramente mediante PayPal antes de la ejecución técnica.
           </p>
           <p>
-            <strong>4. Requisitos y Entrega de Accesos:</strong> Para la ejecución de tareas de reparación, optimización o mantenimiento, el cliente facilitará los accesos temporales imprescindibles mediante un canal cifrado seguro independiente. DevPro Digital nunca solicitará contraseñas a través del formulario de compra inicial.
+            <strong>4. Requisitos y Entrega de Accesos:</strong> Para la ejecución de tareas de reparación, optimización o mantenimiento, el cliente facilitará los accesos temporales imprescindibles mediante un canal cifrado seguro independiente. Webgae nunca solicitará contraseñas a través del formulario de compra inicial.
           </p>
           <p>
             <strong>5. Derecho de Desistimiento:</strong> De conformidad con el artículo 103, apartados a) y m) del Texto Refundido de la Ley General para la Defensa de los Consumidores y Usuarios (TRLGDCU), el derecho de desistimiento no será aplicable una vez que la prestación del servicio haya comenzado o haya sido completamente ejecutada con el consentimiento previo y expreso del cliente.
@@ -45,7 +45,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ isOpen, docType, onClose
       body: (
         <div className="space-y-4 text-sm text-slate-300 leading-relaxed">
           <p>
-            <strong>Responsable del Tratamiento:</strong> DevPro Digital Servicios Tecnológicos.
+            <strong>Responsable del Tratamiento:</strong> Webgae Servicios Tecnológicos.
           </p>
           <p>
             <strong>Finalidad del Tratamiento:</strong> Los datos de contacto (nombre, correo electrónico, URL y notas técnicas) facilitados voluntariamente por el cliente en el formulario de contratación sin registro se utilizan exclusivamente para la gestión y ejecución del servicio solicitado, la facturación correspondiente y las comunicaciones operativas relativas al pedido.
@@ -93,7 +93,7 @@ export const LegalModal: React.FC<LegalModalProps> = ({ isOpen, docType, onClose
           <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
             <div className="flex items-center gap-2 text-slate-200">
               <Mail className="w-4 h-4 text-indigo-400" />
-              <span className="font-mono text-sm">soporte@devpro.local</span>
+              <span className="font-mono text-sm">soporte@webgae.com</span>
             </div>
             <p className="text-xs text-slate-400">
               Horario de atención: Lunes a Viernes de 09:00 a 19:00 CET. Intervenciones de emergencia 24/7 para pedidos marcados como urgentes.

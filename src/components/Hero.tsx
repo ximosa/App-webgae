@@ -6,7 +6,7 @@ interface HeroProps { onExploreCatalog: () => void; onOpenUrgentService: () => v
 export const Hero: React.FC<HeroProps> = ({ onExploreCatalog, onOpenUrgentService }) => (
   <section className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 py-16 md:py-24">
     <div className="mx-auto max-w-5xl px-4 text-center">
-      <p className="mb-4 text-xs font-bold uppercase tracking-widest text-indigo-400">DevPro Digital · Pagos seguros</p>
+      <p className="mb-4 text-xs font-bold uppercase tracking-widest text-indigo-400">Webgae · Pagos seguros</p>
       <h1 className="text-4xl font-extrabold tracking-tight text-white sm:text-6xl">Paga tus servicios web <span className="text-indigo-400">fácilmente</span></h1>
       <p className="mx-auto mt-6 max-w-2xl text-slate-300">Escoge el pago por horas o abona el importe que hemos acordado contigo. ¿Tienes dudas? Contacta conmigo por WhatsApp antes de pagar.</p>
       <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">

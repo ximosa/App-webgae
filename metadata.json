@@ -1,5 +1,5 @@
 {
-  "name": "DevPro Digital - Contratación de Servicios Web",
+  "name": "Webgae - Contratación de Servicios Web",
   "description": "Plataforma profesional para contratar y pagar servicios de desarrollo web, WordPress, optimización de velocidad y reparaciones urgentes con PayPal sin necesidad de registro.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

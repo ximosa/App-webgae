@@ -1,4 +1,4 @@
-﻿# DevPro Digital — Pasarela de pagos
+﻿# Webgae — Pasarela de pagos
 
 Aplicación web para que los clientes puedan pagar servicios acordados mediante dos modalidades: pago por horas e importe fijo acordado. El catálogo de servicios funciona como referencia y canal de contacto, no como tienda ni contratación automática.
 

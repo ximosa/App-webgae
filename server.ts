@@ -24,7 +24,7 @@ app.get('/api/health', (_req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    service: 'DevPro Digital Platform'
+    service: 'Webgae Platform'
   });
 });
 
@@ -49,7 +49,7 @@ async function startServer() {
   }
 
   app.listen(port, '0.0.0.0', () => {
-    console.log(`[DevPro Server] Servidor activo en:`);
+    console.log(`[Webgae Server] Servidor activo en:`);
     console.log(`  ➜ Local:   http://localhost:${port}`);
     console.log(`  ➜ Network: http://127.0.0.1:${port}`);
   });

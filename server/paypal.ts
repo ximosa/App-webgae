@@ -108,7 +108,7 @@ export async function createPayPalOrder(params: CreateOrderParams): Promise<PayP
       }
     ],
     application_context: {
-      brand_name: 'DevPro Digital',
+      brand_name: 'Webgae',
       locale: 'es-ES',
       landing_page: 'NO_PREFERENCE',
       user_action: 'PAY_NOW',
@@ -169,7 +169,7 @@ export async function capturePayPalOrder(paypalOrderId: string, expectedAmountIn
       status: 'COMPLETED',
       capturedAmountInCents: expectedAmountInCents,
       currency: expectedCurrency,
-      payerEmail: 'sandbox-customer@devpro.local'
+      payerEmail: 'sandbox-customer@webgae.com'
     };
   }
 

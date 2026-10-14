@@ -58,7 +58,7 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
-            <span>DevPro Digital</span>
+            <span>Webgae</span>
           </div>
           <p className="text-[11px] leading-relaxed text-slate-400">
             Plataforma profesional para la contratación inmediata y el pago seguro de servicios de ingeniería web, WordPress, optimización de velocidad y mantenimiento continuo.
@@ -153,7 +153,7 @@ export const Footer: React.FC<FooterProps> = ({
       {/* Copyright */}
       <div className="border-t border-slate-900 py-6 text-center text-[11px] text-slate-500 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div>
-          © {new Date().getFullYear()} DevPro Digital. Todos los derechos reservados.
+          © {new Date().getFullYear()} Webgae. Todos los derechos reservados.
         </div>
         <div className="flex items-center gap-4 text-slate-400">
           <span>Cumplimiento WCAG 2.2 AA</span>

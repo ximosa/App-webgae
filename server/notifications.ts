@@ -4,10 +4,10 @@ import { formatCurrencyEUR } from '../src/shared/catalog.ts';
 
 dotenv.config();
 
-const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || 'admin@devpro.local';
+const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || 'admin@webgae.com';
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'DevPro Contacto <onboarding@resend.dev>';
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Webgae Contacto <onboarding@resend.dev>';
 const ADMIN_WEBHOOK_URL = process.env.ADMIN_ALERT_WEBHOOK_URL || ''; // Webhook para Telegram, Discord o Slack
 
 export interface NotificationResult {
@@ -20,7 +20,7 @@ export interface NotificationResult {
  * Notificar al administrador y al cliente cuando un pedido ha sido pagado y capturado
  */
 export async function notifyNewPaidOrder(order: OrderRecord): Promise<NotificationResult> {
-  const subjectAdmin = `🚨 [NUEVO PAGO DEVPRO] ${order.serviceName} (${formatCurrencyEUR(order.amountInCents)}) - ${order.customerName}`;
+  const subjectAdmin = `🚨 [NUEVO PAGO WEBGAE] ${order.serviceName} (${formatCurrencyEUR(order.amountInCents)}) - ${order.customerName}`;
   const trackingLink = `${APP_URL}/?order=${encodeURIComponent(order.id)}&token=${encodeURIComponent(order.accessToken)}`;
 
   const adminBodyText = `
@@ -69,7 +69,7 @@ ACCIONES RECOMENDADAS:
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          content: `🚨 **¡NUEVO PAGO RECIBIDO EN DEVPRO!**\n**Servicio:** ${order.serviceName}\n**Importe:** ${formatCurrencyEUR(order.amountInCents)}\n**Cliente:** ${order.customerName} (${order.customerEmail})\n**Web:** ${order.websiteUrl || 'N/A'}\n**Problema:** ${order.problemDescription}\n**Enlace Pedido:** ${trackingLink}`
+          content: `🚨 **¡NUEVO PAGO RECIBIDO EN WEBGAE!**\n**Servicio:** ${order.serviceName}\n**Importe:** ${formatCurrencyEUR(order.amountInCents)}\n**Cliente:** ${order.customerName} (${order.customerEmail})\n**Web:** ${order.websiteUrl || 'N/A'}\n**Problema:** ${order.problemDescription}\n**Enlace Pedido:** ${trackingLink}`
         })
       });
       adminNotified = true;
@@ -90,7 +90,7 @@ ACCIONES RECOMENDADAS:
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'DevPro Alertas <alertas@devpro.local>',
+          from: 'Webgae Alertas <alertas@webgae.com>',
           to: [ADMIN_EMAIL],
           subject: subjectAdmin,
           text: adminBodyText
@@ -116,7 +116,7 @@ ${trackingLink}
 Siguientes pasos:
 Un miembro de nuestro equipo técnico está revisando los detalles de tu solicitud. En breve recibirás un mensaje para coordinar la intervención o los accesos temporales necesarios a través de un canal seguro.
 
-Gracias por confiar en DevPro Digital.
+Gracias por confiar en Webgae.
       `.trim();
 
       await fetch('https://api.resend.com/emails', {
@@ -126,7 +126,7 @@ Gracias por confiar en DevPro Digital.
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          from: 'DevPro Soporte <soporte@devpro.local>',
+          from: 'Webgae Soporte <soporte@webgae.com>',
           to: [order.customerEmail],
           subject: `Confirmación de Pedido: ${order.serviceName} [${order.id}]`,
           text: clientBodyText

@@ -29,7 +29,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div className="flex flex-col">
               <span className="font-extrabold text-lg tracking-tight text-white flex items-center gap-1.5">
-                DevPro <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Digital</span>
+                Webgae <span className="text-xs font-semibold px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">Pagos</span>
               </span>
               <span className="text-[10px] text-slate-400 tracking-wide uppercase font-medium">Servicios Web Profesionales</span>
             </div>
