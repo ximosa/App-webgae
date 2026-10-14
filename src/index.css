@@ -9,4 +9,15 @@
   code, pre {
     font-family: 'JetBrains Mono', monospace;
   }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  a[href] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
 }
