@@ -7,6 +7,7 @@ dotenv.config();
 const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || 'admin@devpro.local';
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
+const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'DevPro Contacto <onboarding@resend.dev>';
 const ADMIN_WEBHOOK_URL = process.env.ADMIN_ALERT_WEBHOOK_URL || ''; // Webhook para Telegram, Discord o Slack
 
 export interface NotificationResult {
@@ -167,6 +168,25 @@ DESCRIPCIÓN DEL PROYECTO:
   console.log('\n[NUEVA SOLICITUD DE PRESUPUESTO]');
   console.log(quoteText);
   console.log('\n');
+
+  if (RESEND_API_KEY) {
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: RESEND_FROM_EMAIL,
+          to: [ADMIN_EMAIL],
+          reply_to: quote.customerEmail,
+          subject: `Nueva consulta: ${quote.serviceName} — ${quote.customerName}`,
+          text: `Servicio: ${quote.serviceName}\nNombre: ${quote.customerName}\nCorreo: ${quote.customerEmail}\nReferencia: ${quote.id}\n\nMensaje:\n${quote.projectDescription}`
+        })
+      });
+      if (!response.ok) console.error('[CONTACTO] Resend no pudo entregar el correo:', await response.text());
+    } catch (error) {
+      console.error('[CONTACTO] Error enviando la consulta por Resend:', error);
+    }
+  }
 
   if (ADMIN_WEBHOOK_URL) {
     try {

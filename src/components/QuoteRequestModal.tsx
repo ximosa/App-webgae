@@ -1,313 +1,65 @@
-import React, { useState } from 'react';
-import { X, Send, CheckCircle2, Loader2, AlertCircle, Sparkles } from 'lucide-react';
+﻿import React, { useState } from 'react';
+import { X, Send, CheckCircle2, Loader2, AlertCircle, Mail } from 'lucide-react';
 import { ServiceItem } from '../shared/types.ts';
 
-interface QuoteRequestModalProps {
+interface ContactModalProps {
   service: ServiceItem | null;
   isOpen: boolean;
   onClose: () => void;
   onOpenLegal: (type: 'terms' | 'privacy') => void;
 }
 
-export const QuoteRequestModal: React.FC<QuoteRequestModalProps> = ({
-  service,
-  isOpen,
-  onClose,
-  onOpenLegal
-}) => {
-  const [formData, setFormData] = useState({
-    customerName: '',
-    customerEmail: '',
-    websiteUrl: '',
-    budgetRange: '1.500 € - 3.000 €',
-    timeline: 'En las próximas 2 a 4 semanas',
-    projectDescription: '',
-    termsAccepted: false,
-    privacyAccepted: false
-  });
-
+export const QuoteRequestModal: React.FC<ContactModalProps> = ({ service, isOpen, onClose, onOpenLegal }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [message, setMessage] = useState('');
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [quoteSuccess, setQuoteSuccess] = useState<{ quoteId: string; message: string } | null>(null);
+  const [error, setError] = useState('');
+  const [sent, setSent] = useState(false);
 
   if (!isOpen || !service) return null;
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.customerName.trim() || !formData.customerEmail.trim() || !formData.projectDescription.trim()) {
-      setError('Por favor, rellena todos los campos obligatorios.');
-      return;
-    }
-
-    if (!formData.termsAccepted || !formData.privacyAccepted) {
-      setError('Debes aceptar las condiciones y confirmar la lectura de la política de privacidad.');
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch('/api/quote-request', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceId: service.id,
-          customerName: formData.customerName,
-          customerEmail: formData.customerEmail,
-          websiteUrl: formData.websiteUrl,
-          budgetRange: formData.budgetRange,
-          timeline: formData.timeline,
-          projectDescription: formData.projectDescription,
-          termsAccepted: formData.termsAccepted,
-          privacyAccepted: formData.privacyAccepted
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Error al enviar la solicitud de presupuesto.');
-      }
-
-      setQuoteSuccess({
-        quoteId: data.quoteId,
-        message: data.message
-      });
-    } catch (err: any) {
-      setError(err.message || 'No se pudo registrar la solicitud. Inténtalo de nuevo.');
-    } finally {
-      setLoading(false);
-    }
+  const close = () => {
+    setName(''); setEmail(''); setMessage(''); setPrivacyAccepted(false);
+    setError(''); setSent(false); onClose();
   };
 
-  const handleResetAndClose = () => {
-    setQuoteSuccess(null);
-    setError(null);
-    onClose();
+  const submit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (message.trim().length < 15) { setError('Cuéntame un poco más (mínimo 15 caracteres).'); return; }
+    if (!privacyAccepted) { setError('Acepta la política de privacidad para enviar tu consulta.'); return; }
+    setLoading(true); setError('');
+    try {
+      const response = await fetch('/api/quote-request', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ serviceId: service.id, customerName: name, customerEmail: email, projectDescription: message, privacyAccepted: true })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw new Error(data.error || 'No se pudo enviar la consulta. Inténtalo de nuevo.');
+      setSent(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo enviar la consulta. Inténtalo de nuevo.');
+    } finally { setLoading(false); }
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="quote-modal-title"
-    >
-      <div className="relative w-full max-w-xl max-h-[90vh] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-800 bg-slate-950/70 flex items-center justify-between">
-          <div>
-            <div className="text-xs font-semibold text-sky-400 uppercase tracking-wider">
-              Solicitud de Presupuesto Personalizado
-            </div>
-            <h2 id="quote-modal-title" className="text-base sm:text-lg font-bold text-white">
-              {service.name}
-            </h2>
-          </div>
-          <button
-            onClick={handleResetAndClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-500"
-            aria-label="Cerrar presupuesto"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="p-6 overflow-y-auto space-y-5">
-          {quoteSuccess ? (
-            <div className="p-6 rounded-2xl bg-slate-950 border border-emerald-500/30 text-center space-y-4">
-              <div className="w-12 h-12 mx-auto rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-white">
-                Solicitud de Presupuesto Recibida
-              </h3>
-              <p className="text-xs text-slate-300">
-                {quoteSuccess.message}
-              </p>
-              <div className="p-3 rounded-lg bg-slate-900 border border-slate-800 text-xs font-mono text-sky-300">
-                Referencia de Expediente: {quoteSuccess.quoteId}
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Un ingeniero senior analizará tus requerimientos técnicos y te enviará la propuesta detallada a <strong>{formData.customerEmail}</strong>.
-              </p>
-              <div className="pt-2">
-                <button
-                  type="button"
-                  onClick={handleResetAndClose}
-                  className="px-5 py-2 text-xs font-bold text-white bg-sky-600 hover:bg-sky-500 rounded-lg transition-colors"
-                >
-                  Entendido y Volver
-                </button>
-              </div>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="p-3 rounded-xl bg-sky-950/30 border border-sky-900/40 text-xs text-sky-200">
-                Este servicio requiere especificación previa. Analizaremos tu proyecto y te remitiremos un presupuesto formal cerrado sin compromiso.
-              </div>
-
-              {error && (
-                <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-900/50 text-xs text-rose-300 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* Nombre */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Nombre y Apellidos o Empresa <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.customerName}
-                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                  placeholder="Ej. Roberto Sánchez (Studio Web)"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Correo Electrónico de Contacto <span className="text-rose-400">*</span>
-                </label>
-                <input
-                  type="email"
-                  required
-                  value={formData.customerEmail}
-                  onChange={(e) => setFormData({ ...formData, customerEmail: e.target.value })}
-                  placeholder="roberto@ejemplo.com"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
-                />
-              </div>
-
-              {/* URL */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  URL del Sitio Web o Referencias (Opcional)
-                </label>
-                <input
-                  type="text"
-                  value={formData.websiteUrl}
-                  onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                  placeholder="https://tudominio.com"
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
-                />
-              </div>
-
-              {/* Rango Presupuestario */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Rango de Inversión Estimado
-                  </label>
-                  <select
-                    value={formData.budgetRange}
-                    onChange={(e) => setFormData({ ...formData, budgetRange: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-sky-500"
-                  >
-                    <option value="500 € - 1.500 €">500 € - 1.500 €</option>
-                    <option value="1.500 € - 3.000 €">1.500 € - 3.000 €</option>
-                    <option value="3.000 € - 6.000 €">3.000 € - 6.000 €</option>
-                    <option value="Más de 6.000 €">Más de 6.000 €</option>
-                    <option value="A definir con consultoría">A definir con asesoramiento</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">
-                    Plazo Deseado
-                  </label>
-                  <select
-                    value={formData.timeline}
-                    onChange={(e) => setFormData({ ...formData, timeline: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 focus:outline-none focus:border-sky-500"
-                  >
-                    <option value="Inmediato (< 2 semanas)">Inmediato (&lt; 2 semanas)</option>
-                    <option value="En las próximas 2 a 4 semanas">2 a 4 semanas</option>
-                    <option value="1 a 2 meses">1 a 2 meses</option>
-                    <option value="Sin fecha fija / Flexible">Sin fecha fija / Flexible</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Descripción */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
-                  Descripción Detallada del Proyecto <span className="text-rose-400">*</span>
-                </label>
-                <textarea
-                  rows={4}
-                  required
-                  value={formData.projectDescription}
-                  onChange={(e) => setFormData({ ...formData, projectDescription: e.target.value })}
-                  placeholder="Detalla qué funcionalidades necesitas, integraciones de API, tecnologías deseadas o problemas a resolver..."
-                  className="w-full px-3 py-2 bg-slate-950 border border-slate-800 rounded-xl text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 resize-none"
-                />
-              </div>
-
-              {/* Checkboxes */}
-              <div className="space-y-2 pt-2 border-t border-slate-800">
-                <label className="flex items-start gap-2 text-xs text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    required
-                    checked={formData.termsAccepted}
-                    onChange={(e) => setFormData({ ...formData, termsAccepted: e.target.checked })}
-                    className="mt-0.5 rounded border-slate-700 text-sky-600 focus:ring-sky-500"
-                  />
-                  <span>
-                    Acepto las{' '}
-                    <button
-                      type="button"
-                      onClick={() => onOpenLegal('terms')}
-                      className="text-sky-400 underline font-semibold"
-                    >
-                      Condiciones de Contratación
-                    </button>
-                    .
-                  </span>
-                </label>
-
-                <label className="flex items-start gap-2 text-xs text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    required
-                    checked={formData.privacyAccepted}
-                    onChange={(e) => setFormData({ ...formData, privacyAccepted: e.target.checked })}
-                    className="mt-0.5 rounded border-slate-700 text-sky-600 focus:ring-sky-500"
-                  />
-                  <span>
-                    He leído la{' '}
-                    <button
-                      type="button"
-                      onClick={() => onOpenLegal('privacy')}
-                      className="text-sky-400 underline font-semibold"
-                    >
-                      Política de Privacidad
-                    </button>{' '}
-                    y autorizo el tratamiento de mis datos para la emisión del presupuesto.
-                  </span>
-                </label>
-              </div>
-
-              <div className="pt-3 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-2.5 text-xs sm:text-sm font-bold text-white bg-sky-600 hover:bg-sky-500 rounded-xl flex items-center gap-2 transition-colors disabled:opacity-60"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                  <span>{loading ? 'Enviando...' : 'Solicitar Presupuesto Gratuito'}</span>
-                </button>
-              </div>
-            </form>
-          )}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="contact-title">
+      <div className="flex max-h-[90vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
+        <header className="flex items-center justify-between border-b border-slate-800 bg-slate-950/70 px-6 py-4">
+          <div><div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-indigo-400"><Mail className="h-4 w-4"/> Formulario de contacto</div><h2 id="contact-title" className="mt-1 text-lg font-bold text-white">Hablemos de tu proyecto</h2></div>
+          <button type="button" onClick={close} aria-label="Cerrar formulario" className="rounded-lg p-2 text-slate-400 hover:bg-slate-800 hover:text-white"><X className="h-5 w-5"/></button>
+        </header>
+        <div className="overflow-y-auto p-6">
+          {sent ? <div className="space-y-4 py-5 text-center"><CheckCircle2 className="mx-auto h-12 w-12 text-emerald-400"/><h3 className="text-xl font-bold text-white">Consulta enviada</h3><p className="text-sm text-slate-300">Gracias, {name}. He recibido tu mensaje sobre <strong>{service.name}</strong> y responderé a <strong>{email}</strong>.</p><button type="button" onClick={close} className="rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white hover:bg-indigo-500">Cerrar</button></div> : <form onSubmit={submit} className="space-y-5">
+            <div className="rounded-xl border border-indigo-900/50 bg-indigo-950/30 p-4"><p className="text-xs font-semibold uppercase tracking-wide text-indigo-300">Servicio consultado</p><p className="mt-1 font-bold text-white">{service.name}</p></div>
+            {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-rose-900/50 bg-rose-950/40 p-3 text-sm text-rose-300"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0"/>{error}</div>}
+            <div><label htmlFor="contact-name" className="mb-1.5 block text-sm font-semibold text-slate-200">Tu nombre</label><input id="contact-name" required minLength={2} maxLength={150} autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Nombre y apellidos" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"/></div>
+            <div><label htmlFor="contact-email" className="mb-1.5 block text-sm font-semibold text-slate-200">Tu correo electrónico</label><input id="contact-email" required type="email" maxLength={150} autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="nombre@correo.com" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"/><p className="mt-1.5 text-xs text-slate-400">Te responderé a esta dirección.</p></div>
+            <div><label htmlFor="contact-message" className="mb-1.5 block text-sm font-semibold text-slate-200">¿En qué puedo ayudarte?</label><textarea id="contact-message" required minLength={15} maxLength={4000} rows={5} value={message} onChange={e=>setMessage(e.target.value)} placeholder="Cuéntame brevemente qué necesitas o qué duda tienes…" className="w-full resize-y rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-sm text-white placeholder:text-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"/></div>
+            <label className="flex items-start gap-2.5 text-xs leading-relaxed text-slate-300"><input type="checkbox" required checked={privacyAccepted} onChange={e=>setPrivacyAccepted(e.target.checked)} className="mt-0.5 rounded border-slate-600 text-indigo-600 focus:ring-indigo-500"/><span>He leído y acepto la <button type="button" onClick={()=>onOpenLegal('privacy')} className="font-semibold text-indigo-300 underline">Política de Privacidad</button> para gestionar esta consulta.</span></label>
+            <button type="submit" disabled={loading} className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white hover:bg-indigo-500 disabled:cursor-wait disabled:opacity-60">{loading ? <><Loader2 className="h-4 w-4 animate-spin"/> Enviando…</> : <><Send className="h-4 w-4"/> Enviar consulta</>}</button>
+          </form>}
         </div>
       </div>
     </div>

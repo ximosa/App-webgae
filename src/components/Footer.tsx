@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShieldCheck, Lock, CreditCard, Mail, Sparkles } from 'lucide-react';
+import { ShieldCheck, Lock, CreditCard, Sparkles, MessageCircle, Mail } from 'lucide-react';
 import { LegalDocType } from './LegalModal.tsx';
 
 interface FooterProps {
@@ -137,12 +137,13 @@ export const Footer: React.FC<FooterProps> = ({
             Atención al Cliente
           </div>
           <p className="text-[11px] text-slate-400">
-            Soporte técnico directo sin intermediarios:
+            Contacto directo para consultar servicios y confirmar importes:
           </p>
-          <div className="flex items-center gap-2 text-indigo-400 font-mono text-xs">
-            <Mail className="w-3.5 h-3.5" />
-            <span>soporte@devpro.local</span>
-          </div>
+          {import.meta.env.VITE_WHATSAPP_NUMBER && <a href={`https://wa.me/${(import.meta.env.VITE_WHATSAPP_NUMBER || '').replace(/\D/g, '')}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-emerald-400 hover:text-emerald-300">
+            <MessageCircle className="h-4 w-4" /> WhatsApp
+          </a>}
+          {import.meta.env.VITE_CONTACT_EMAIL && <a href={`mailto:${import.meta.env.VITE_CONTACT_EMAIL}`} className="inline-flex items-center gap-2 text-indigo-300 hover:text-indigo-200"><Mail className="h-4 w-4" /> {import.meta.env.VITE_CONTACT_EMAIL}</a>}
+          <p className="text-[11px] text-slate-500">Escríbeme por WhatsApp para confirmar el servicio y el importe antes del pago.</p>
           <p className="text-[10px] text-slate-500">
             Lunes a Viernes de 09:00 a 19:00 CET. Intervenciones críticas prioritarias 24/7.
           </p>

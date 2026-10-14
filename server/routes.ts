@@ -67,6 +67,7 @@ apiRouter.post('/checkout/create-order', async (req: Request, res: Response) => 
     const {
       serviceId,
       hours,
+      customAmountInCents,
       customerName,
       customerEmail,
       websiteUrl,
@@ -117,12 +118,11 @@ apiRouter.post('/checkout/create-order', async (req: Request, res: Response) => 
       const hourlyRate = service.hourlyRateInCents || 1500; // 15 € la hora
       calculatedAmountInCents = validatedHours * hourlyRate;
     } else if (service.pricingType === 'fixed') {
-      if (service.priceInCents === null || service.priceInCents <= 0) {
-        return res.status(400).json({
-          error: 'Este servicio requiere un presupuesto técnico personalizado previo.'
-        });
+      const amount = Number(customAmountInCents);
+      if (!Number.isSafeInteger(amount) || amount < 1 || amount > 100000000) {
+        return res.status(400).json({ error: 'Importe acordado inválido. Indícalo en céntimos de euro.' });
       }
-      calculatedAmountInCents = service.priceInCents;
+      calculatedAmountInCents = amount;
     } else {
       return res.status(400).json({
         error: 'Este servicio requiere un presupuesto técnico personalizado previo. Por favor, utiliza el formulario de solicitud de presupuesto.'
@@ -134,7 +134,7 @@ apiRouter.post('/checkout/create-order', async (req: Request, res: Response) => 
     const accessToken = crypto.randomBytes(24).toString('hex');
     const orderTitle = validatedHours
       ? `${service.name} (${validatedHours} ${validatedHours === 1 ? 'hora' : 'horas'} a 15 €/h)`
-      : service.name;
+      : 'Pago de importe fijo acordado';
 
     // Crear orden en PayPal REST API
     const paypalResult = await createPayPalOrder({
@@ -352,7 +352,6 @@ apiRouter.post('/quote-request', (req: Request, res: Response) => {
       budgetRange,
       projectDescription,
       timeline,
-      termsAccepted,
       privacyAccepted
     } = req.body;
 
@@ -369,8 +368,8 @@ apiRouter.post('/quote-request', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Por favor, detalla los requerimientos de tu proyecto (mínimo 15 caracteres).' });
     }
 
-    if (!termsAccepted || !privacyAccepted) {
-      return res.status(400).json({ error: 'Debes aceptar las condiciones y política de privacidad.' });
+    if (!privacyAccepted) {
+      return res.status(400).json({ error: 'Debes aceptar la política de privacidad para enviar la consulta.' });
     }
 
     const service = getServiceById(serviceId) || SERVICES_CATALOG[SERVICES_CATALOG.length - 1];

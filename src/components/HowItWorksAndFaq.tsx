@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronDown, ChevronUp, Check, Shield, Zap, Lock, CreditCard } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 export const HowItWorksAndFaq: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -7,46 +7,46 @@ export const HowItWorksAndFaq: React.FC = () => {
   const steps = [
     {
       num: '01',
-      title: 'Elige tu servicio',
-      desc: 'Consulta nuestro catálogo con tarifas cerradas en EUR o solicita presupuesto gratuito si tu proyecto es a medida.'
+      title: 'Acuerda el trabajo y el importe',
+      desc: 'Consulta el catálogo informativo y confirma conmigo por WhatsApp o mediante el formulario qué necesitas y cuánto pagar.'
     },
     {
       num: '02',
-      title: 'Datos de contacto (Sin Registro)',
-      desc: 'Rellena tu email y describe brevemente la avería o necesidad. No necesitas crear contraseñas ni perfiles.'
+      title: 'Elige cómo pagar',
+      desc: 'Selecciona pago por horas o pago de importe fijo acordado. En el pago fijo, escribe la cantidad que te indiqué.'
     },
     {
       num: '03',
-      title: 'Pago verificado con PayPal',
-      desc: 'Autoriza el pago de forma segura a través de PayPal. El importe se calcula y valida estrictamente en el servidor.'
+      title: 'Completa tus datos',
+      desc: 'Indica tu nombre y correo para identificar el pago y recibir la confirmación. Puedes añadir una referencia opcional.'
     },
     {
       num: '04',
-      title: 'Intervención técnica inmediata',
-      desc: 'Asignamos a un ingeniero senior a tu caso. Compartirás accesos técnicos por canal cifrado seguro tras la confirmación.'
+      title: 'Paga de forma segura',
+      desc: 'Continúa al checkout de PayPal para completar el pago y recibir la confirmación de la operación.'
     }
   ];
 
   const faqs = [
     {
-      q: '¿Por qué no necesito registrarme ni crear una cuenta para contratar?',
-      a: 'Creemos que cuando tienes una urgencia técnica o necesitas contratar un servicio web profesional, los procesos de registro, verificación de email y contraseñas añaden fricción innecesaria. Puedes contratar como invitado con tu correo electrónico y recibirás una referencia única con token criptográfico para consultar el estado en cualquier momento.'
+      q: '¿Qué formas de pago hay?',
+      a: 'Hay dos modalidades: pago por horas, donde indicas las horas acordadas, y pago de importe fijo, donde escribes la cantidad que te comuniqué. Ambas continúan al checkout seguro de PayPal.'
     },
     {
-      q: '¿Cómo facilito los accesos a mi web sin poner en riesgo mis contraseñas?',
-      a: 'Nunca solicitamos contraseñas ni claves API en el formulario abierto de contratación. Tras verificar el pago en PayPal, generamos un enlace seguro de un solo uso cifrado de extremo a extremo para que nos proporciones un usuario temporal de WordPress o del panel de hosting, el cual recomendamos borrar una vez terminada la intervención.'
+      q: '¿Cómo sé qué importe debo pagar?',
+      a: 'Confirma conmigo el trabajo y su importe antes de pagar. Para el pago fijo, introduce exactamente la cantidad que te indiqué; para el pago por horas, selecciona las horas acordadas.'
     },
     {
-      q: '¿Qué ocurre si el problema de mi web no tiene solución técnica?',
-      a: 'Si tras el diagnóstico inicial determinamos que el sitio no puede recuperarse por una avería insalvable del servidor o pérdida previa total de datos sin copia de seguridad, te entregamos un informe técnico detallado y procedemos al reembolso del 100% del importe cobrado a través de PayPal.'
+      q: '¿Puedo consultar un servicio antes de pagar?',
+      a: 'Sí. Usa el botón de WhatsApp o el formulario de contacto de la ficha del servicio. El mensaje llegará con el servicio seleccionado para que puedas explicarme tu consulta.'
     },
     {
-      q: '¿Emitís factura legal española / europea deducible?',
-      a: 'Sí, absolutamente. Tras la confirmación del pago en PayPal, emitimos factura fiscal completa con desglose de IVA para autónomos y empresas de España y la Unión Europea (VIES).'
+      q: '¿Qué datos tengo que completar para pagar?',
+      a: 'Solo pedimos tu nombre y correo electrónico para identificar la operación y enviarte la confirmación. El concepto o referencia del pago es opcional.'
     },
     {
-      q: '¿Cuál es el tiempo de respuesta para reparaciones urgentes?',
-      a: 'Los servicios marcados con carácter de Urgencia tienen un tiempo de diagnóstico y primera intervención técnica garantizado inferior a 2 horas laborables desde la recepción de la orden y la verificación de accesos.'
+      q: '¿Qué hago si no recibo la confirmación?',
+      a: 'Comprueba primero el correo asociado al pago. Si necesitas ayuda, contacta conmigo por WhatsApp o envía una consulta desde el formulario del catálogo.'
     }
   ];
 
@@ -57,13 +57,13 @@ export const HowItWorksAndFaq: React.FC = () => {
         <div className="space-y-8">
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <div className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">
-              Flujo Transparente y Sin Fricción
+              Pago sencillo y transparente
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              Cómo contratar tu servicio en 4 pasos
+              Cómo realizar tu pago en 4 pasos
             </h2>
             <p className="text-xs sm:text-sm text-slate-400">
-              Diseñado para resolver incidencias y poner en marcha tus proyectos con máxima rapidez.
+              Consulta el servicio, confirma el importe y completa el pago con los datos necesarios.
             </p>
           </div>
 

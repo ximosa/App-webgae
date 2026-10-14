@@ -178,7 +178,7 @@ export default function App() {
           <>
             <Hero
               onExploreCatalog={scrollToCatalog}
-              onOpenUrgentService={handleOpenUrgentRepair}
+              onOpenUrgentService={() => document.getElementById('contacto')?.scrollIntoView({ behavior: 'smooth' })}
             />
 
             <CatalogSection

@@ -30,6 +30,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
 }) => {
   const [step, setStep] = useState<'form' | 'summary' | 'payment'>('form');
   const [hours, setHours] = useState<number>(initialHours || 1);
+  const [agreedAmount, setAgreedAmount] = useState('');
+  const [paymentConcept, setPaymentConcept] = useState('');
   const [formData, setFormData] = useState<CustomerFormData>({
     customerName: '',
     customerEmail: '',
@@ -60,9 +62,10 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
   const paypalButtonContainerRef = useRef<HTMLDivElement>(null);
 
   const isHourly = service?.pricingType === 'hourly';
+  const isAgreedAmount = service?.pricingType === 'fixed';
   const effectivePriceInCents = isHourly
     ? hours * (service?.hourlyRateInCents || 1500)
-    : (service?.priceInCents || 0);
+    : isAgreedAmount ? Math.round((Number(agreedAmount.replace(',', '.')) || 0) * 100) : (service?.priceInCents || 0);
 
   // Reiniciar estado al abrir para un nuevo servicio
   useEffect(() => {
@@ -74,6 +77,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       setShowCardForm(false);
       setSelectedPaymentMethod('paypal');
       setHours(initialHours || 1);
+      setAgreedAmount('');
+      setPaymentConcept('');
       setCardData({
         number: '',
         holderName: '',
@@ -98,12 +103,8 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
       errors.customerEmail = 'Introduce una dirección de correo válida.';
     }
 
-    if (formData.websiteUrl && !formData.websiteUrl.includes('.')) {
-      errors.websiteUrl = 'Introduce una URL o dominio válido (ej. tudominio.com).';
-    }
-
-    if (!formData.problemDescription.trim() || formData.problemDescription.trim().length < 10) {
-      errors.problemDescription = 'Describe brevemente la avería o requerimiento (mínimo 10 caracteres).';
+    if (isAgreedAmount && (!Number.isFinite(Number(agreedAmount.replace(',', '.'))) || Number(agreedAmount.replace(',', '.')) <= 0 || effectivePriceInCents > 100000000)) {
+      errors.amount = 'Introduce el importe acordado (mayor que 0 y hasta 1.000.000 €).';
     }
 
     if (!formData.termsAccepted) {
@@ -137,11 +138,11 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
         body: JSON.stringify({
           serviceId: service.id,
           hours: isHourly ? hours : undefined,
+          customAmountInCents: isAgreedAmount ? effectivePriceInCents : undefined,
           customerName: formData.customerName,
           customerEmail: formData.customerEmail,
           websiteUrl: formData.websiteUrl,
-          problemDescription: formData.problemDescription,
-          technicalNotes: formData.technicalNotes,
+          problemDescription: paymentConcept.trim() || (isHourly ? `Pago de ${hours} ${hours === 1 ? 'hora' : 'horas'}` : 'Pago de importe fijo acordado'),
           termsAccepted: formData.termsAccepted,
           privacyAccepted: formData.privacyAccepted,
           newsletterOptIn: formData.newsletterOptIn
@@ -341,11 +342,19 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
           {/* Service Banner */}
           <div className="p-3.5 rounded-xl bg-slate-950/40 border border-slate-800 flex items-center justify-between gap-3">
             <div>
-              <div className="text-[11px] text-slate-400 uppercase font-semibold">{service.categoryLabel}</div>
-              <div className="text-sm font-bold text-white">{service.name}</div>
+              <div className="text-[11px] text-slate-400 uppercase font-semibold">{isAgreedAmount ? 'Pago acordado' : service.categoryLabel}</div>
+              <div className="text-sm font-bold text-white">{isAgreedAmount ? 'Importe fijo acordado' : service.name}</div>
               {isHourly && (
                 <div className="text-xs text-indigo-300 font-semibold mt-0.5">
                   {hours} {hours === 1 ? 'hora contratada' : 'horas contratadas'} (15 € / hora)
+                </div>
+              )}
+              {isAgreedAmount && (
+                <div className="p-4 rounded-xl bg-slate-950 border border-emerald-900/50">
+                  <label htmlFor="agreedAmount" className="block mb-2 text-xs font-bold text-slate-200">Importe que te he indicado (€)</label>
+                  <input id="agreedAmount" type="number" min="0.01" max="1000000" step="0.01" required value={agreedAmount} onChange={e => setAgreedAmount(e.target.value)} placeholder="Ej. 125.00" className="w-full px-3 py-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white" />
+                  {formErrors.amount && <p className="mt-1 text-xs text-rose-400">{formErrors.amount}</p>}
+                  <p className="mt-2 text-xs text-slate-400">Confirma conmigo el total antes de pagar.</p>
                 </div>
               )}
             </div>
@@ -432,7 +441,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               {/* Nombre / Empresa */}
               <div>
                 <label htmlFor="customerName" className="block text-xs font-semibold text-slate-300 mb-1">
-                  Nombre y Apellidos o Razón Social <span className="text-rose-400">*</span>
+                  Nombre del pagador <span className="text-rose-400">*</span>
                 </label>
                 <input
                   id="customerName"
@@ -451,7 +460,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
               {/* Correo electrónico */}
               <div>
                 <label htmlFor="customerEmail" className="block text-xs font-semibold text-slate-300 mb-1">
-                  Correo Electrónico para Comunicaciones y Facturación <span className="text-rose-400">*</span>
+                  Correo electrónico para el recibo y seguimiento <span className="text-rose-400">*</span>
                 </label>
                 <input
                   id="customerEmail"
@@ -463,63 +472,16 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
                 />
                 <p className="text-[11px] text-slate-400 mt-1">
-                  Te enviaremos a este email la confirmación de la orden, el enlace privado de seguimiento y los informes del servicio.
+                  Usaremos este correo para identificar el pago y enviarte la confirmación.
                 </p>
                 {formErrors.customerEmail && (
                   <p className="mt-1 text-xs text-rose-400">{formErrors.customerEmail}</p>
                 )}
               </div>
 
-              {/* URL del sitio web */}
               <div>
-                <label htmlFor="websiteUrl" className="block text-xs font-semibold text-slate-300 mb-1">
-                  URL del Sitio Web o Dominio
-                </label>
-                <input
-                  id="websiteUrl"
-                  type="text"
-                  value={formData.websiteUrl}
-                  onChange={(e) => setFormData({ ...formData, websiteUrl: e.target.value })}
-                  placeholder="https://mitiendaonline.com"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                />
-                {formErrors.websiteUrl && (
-                  <p className="mt-1 text-xs text-rose-400">{formErrors.websiteUrl}</p>
-                )}
-              </div>
-
-              {/* Descripción del problema */}
-              <div>
-                <label htmlFor="problemDescription" className="block text-xs font-semibold text-slate-300 mb-1">
-                  Descripción del Problema o Necesidad <span className="text-rose-400">*</span>
-                </label>
-                <textarea
-                  id="problemDescription"
-                  rows={3}
-                  required
-                  value={formData.problemDescription}
-                  onChange={(e) => setFormData({ ...formData, problemDescription: e.target.value })}
-                  placeholder="Ej. El sitio muestra un error 500 tras actualizar el plugin WooCommerce esta mañana..."
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 resize-none"
-                />
-                {formErrors.problemDescription && (
-                  <p className="mt-1 text-xs text-rose-400">{formErrors.problemDescription}</p>
-                )}
-              </div>
-
-              {/* Información técnica adicional */}
-              <div>
-                <label htmlFor="technicalNotes" className="block text-xs font-semibold text-slate-300 mb-1">
-                  Información Técnica Adicional (Opcional)
-                </label>
-                <input
-                  id="technicalNotes"
-                  type="text"
-                  value={formData.technicalNotes}
-                  onChange={(e) => setFormData({ ...formData, technicalNotes: e.target.value })}
-                  placeholder="Ej. Proveedor de hosting: SiteGround, Versión PHP 8.1, Tema Astra"
-                  className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                />
+                <label htmlFor="paymentConcept" className="block text-xs font-semibold text-slate-300 mb-1">Concepto o referencia del pago <span className="text-slate-500">(opcional)</span></label>
+                <input id="paymentConcept" type="text" maxLength={150} value={paymentConcept} onChange={e => setPaymentConcept(e.target.value)} placeholder="Ej. Factura 2026-014" className="w-full px-3.5 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
               </div>
 
               {/* Legal checkboxes */}
@@ -572,17 +534,6 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <p className="text-xs text-rose-400 pl-6">{formErrors.privacyAccepted}</p>
                 )}
 
-                <label className="flex items-start gap-2.5 text-xs text-slate-400 cursor-pointer pt-1">
-                  <input
-                    type="checkbox"
-                    checked={formData.newsletterOptIn}
-                    onChange={(e) => setFormData({ ...formData, newsletterOptIn: e.target.checked })}
-                    className="mt-0.5 rounded border-slate-700 text-indigo-600 focus:ring-indigo-500"
-                  />
-                  <span>
-                    (Opcional) Deseo recibir recomendaciones sobre seguridad y optimización web por correo.
-                  </span>
-                </label>
               </div>
 
               <div className="pt-4 flex justify-end">
@@ -624,13 +575,7 @@ export const CheckoutModal: React.FC<CheckoutModalProps> = ({
                   <span className="text-slate-300">Email de contacto:</span>
                   <span className="font-mono text-xs text-indigo-300">{formData.customerEmail}</span>
                 </div>
-
-                {formData.websiteUrl && (
-                  <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
-                    <span className="text-slate-300">Sitio web:</span>
-                    <span className="font-mono text-xs text-slate-300">{formData.websiteUrl}</span>
-                  </div>
-                )}
+                {paymentConcept.trim() && <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800"><span className="text-slate-300">Concepto:</span><span className="font-medium text-slate-200">{paymentConcept.trim()}</span></div>}
 
                 {isHourly && (
                   <div className="flex justify-between items-center text-sm py-2 border-b border-slate-800">
